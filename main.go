@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"os"
 
-	// ispmanager "github.com/GlobalArtInc/cert-manager-webhook-ispmanager/ispmanager"
-
 	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -17,8 +15,8 @@ import (
 )
 
 var (
-	GroupName = os.Getenv("GROUP_NAME")
-	isp       = IspClient{os.Getenv("panelUrl"), os.Getenv("user"), os.Getenv("password")}
+	ProviderName = "ispmanager-provider"
+	GroupName    = os.Getenv("GROUP_NAME")
 )
 
 func main() {
@@ -48,7 +46,7 @@ type ispmanagerDNSProviderConfig struct {
 // within a single webhook deployment**.
 // For example, `cloudflare` may be used as the name of a solver.
 func (c *ispmanagerDNSProviderSolver) Name() string {
-	return "ispmanager-provider"
+	return ProviderName
 }
 
 // Present is responsible for actually presenting the DNS record with the
@@ -56,13 +54,13 @@ func (c *ispmanagerDNSProviderSolver) Name() string {
 // This method should tolerate being called multiple times with the same value.
 // cert-manager itself will later perform a self check to ensure that the
 // solver has correctly configured the DNS provider.
-func (c *ispmanagerDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
-	cfg, err := loadConfig(ch.Config)
+func (c *ispmanagerDNSProviderSolver) Present(challengeRequest *v1alpha1.ChallengeRequest) error {
+	cfg, err := loadConfig(challengeRequest.Config)
 	if err != nil {
 		return err
 	}
 	ispClient := NewIspClient(cfg.PaneuUrl, cfg.User, cfg.Password)
-	if err := ispClient.createTXT(getDomainFromZone(ch.ResolvedZone), ch.ResolvedFQDN, ch.Key); err != nil {
+	if err := ispClient.createTXT(getDomainFromZone(challengeRequest.ResolvedZone), challengeRequest.ResolvedFQDN, challengeRequest.Key); err != nil {
 		return fmt.Errorf("unable to create TXT record: %v", err)
 	}
 
@@ -75,13 +73,13 @@ func (c *ispmanagerDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) err
 // value provided on the ChallengeRequest should be cleaned up.
 // This is in order to facilitate multiple DNS validations for the same domain
 // concurrently.
-func (c *ispmanagerDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
-	cfg, err := loadConfig(ch.Config)
+func (c *ispmanagerDNSProviderSolver) CleanUp(challengeRequest *v1alpha1.ChallengeRequest) error {
+	cfg, err := loadConfig(challengeRequest.Config)
 	if err != nil {
 		return err
 	}
 	ispClient := NewIspClient(cfg.PaneuUrl, cfg.User, cfg.Password)
-	if err := ispClient.deleteTXT(getDomainFromZone(ch.ResolvedZone), ch.ResolvedFQDN, ch.Key); err != nil {
+	if err := ispClient.deleteTXT(getDomainFromZone(challengeRequest.ResolvedZone), challengeRequest.ResolvedFQDN, challengeRequest.Key); err != nil {
 		return fmt.Errorf("unable to create TXT record: %v", err)
 	}
 

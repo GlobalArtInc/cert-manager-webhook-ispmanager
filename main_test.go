@@ -15,7 +15,7 @@ func TestRunsSuite(t *testing.T) {
 	fixture := dns.NewFixture(&ispmanagerDNSProviderSolver{},
 		dns.SetAllowAmbientCredentials(false),
 		dns.SetResolvedZone(zone),
-		dns.SetDNSServer("127.0.0.1:53"),
+		dns.SetDNSServer("62.109.29.39:53"),
 		dns.SetManifestPath("testdata/ispmanager"),
 		dns.SetStrict(false),
 	)

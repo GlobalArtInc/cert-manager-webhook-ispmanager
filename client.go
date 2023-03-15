@@ -4,6 +4,7 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -17,12 +18,52 @@ type IspClient struct {
 	password string
 }
 
+type APIError struct {
+	Doc struct {
+		Error struct {
+			Type   string `json:"$type"`
+			Object string `json:"$object"`
+			Lang   string `json:"$lang"`
+			Detail struct {
+				Text string `json:"$"`
+			} `json:"detail"`
+			Message struct {
+				Text string `json:"$"`
+			} `json:"msg"`
+		} `json:"error"`
+	} `json:"doc"`
+}
+
+type APIResponse struct {
+	Doc APIError `json:"doc"`
+}
+
 func NewIspClient(panelUrl string, username string, password string) *IspClient {
 	return &IspClient{
 		panelUrl: panelUrl,
 		username: username,
 		password: password,
 	}
+}
+
+func checkResponse(res *http.Response) error {
+	if res.Body == nil {
+		return fmt.Errorf("request failed with status code %v and empty body", res.StatusCode)
+	}
+
+	decoder := json.NewDecoder(res.Body)
+
+	var apiError APIError
+	err := decoder.Decode(&apiError)
+	if err != nil {
+		return fmt.Errorf("failed to decode: %s", err)
+	}
+	if apiError != (APIError{}) {
+		//fmt.Printf("dev: %s", apiError.Doc.Error.Message.Text)
+		return fmt.Errorf("ISPManager Error: %s", apiError.Doc.Error.Message.Text)
+	}
+
+	return nil
 }
 
 func (c *IspClient) createTXT(plid string, name string, value string) error {
@@ -41,11 +82,16 @@ func (c *IspClient) createTXT(plid string, name string, value string) error {
 			"value":    {value},
 		}
 	)
-	_, err := http.PostForm(c.panelUrl, data)
-
+	res, err := http.PostForm(c.panelUrl, data)
 	if err != nil {
 		return fmt.Errorf("failed to make POST request: %v", err)
 	}
+	err = checkResponse(res)
+	if err != nil {
+		log.Err(err).Send()
+		return err
+	}
+
 	log.Info().
 		Str("event", "created_txt").
 		Str("domain", plid).
@@ -69,10 +115,16 @@ func (c *IspClient) deleteTXT(plid string, name string, value string) error {
 			"elname":   {elid},
 		}
 	)
-	_, err := http.PostForm(c.panelUrl, data)
+	res, err := http.PostForm(c.panelUrl, data)
 	if err != nil {
 		return fmt.Errorf("failed to make POST request: %v", err)
 	}
+	err = checkResponse(res)
+	if err != nil {
+		log.Err(err).Send()
+		return err
+	}
+
 	log.Info().
 		Str("event", "deleted_txt").
 		Str("domain", plid).

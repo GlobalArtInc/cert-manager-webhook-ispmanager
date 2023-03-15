@@ -25,6 +25,9 @@ _test/kubebuilder:
 	rm kubebuilder-tools.tar.gz
 	rm -R kubebuilder
 
+clean-cache:
+	$(GO) clean -testcache
+
 clean: clean-kubebuilder
 
 clean-kubebuilder:
