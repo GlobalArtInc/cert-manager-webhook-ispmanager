@@ -29,6 +29,13 @@ type DeleteTxtRecord struct {
 	Elname   string `url:"elname"`
 }
 
+type ListRecords struct {
+	AuthInfo string `json:"authinfo"`
+	TTL      int    `json:"ttl"`
+	Rtype    string `json:"rtype"`
+	Value    string `json:"value"`
+}
+
 type APIError struct {
 	Doc struct {
 		Error struct {
@@ -65,6 +72,10 @@ func (c *Client) newRequest(method string, body interface{}) (*http.Request, err
 }
 
 func checkResponse(res *http.Response) error {
+	if res.StatusCode > 299 {
+		return fmt.Errorf("response failed with status code: %v", res.StatusCode)
+	}
+
 	if res.Body == nil {
 		return fmt.Errorf("request failed with status code %v and empty body", res.StatusCode)
 	}
@@ -96,6 +107,18 @@ func (c *Client) do(req *http.Request, to interface{}) (*http.Response, error) {
 	}
 
 	return resp, nil
+}
+
+func (c Client) ListRecords(body ListRecords) ([]*ListRecords, error) {
+	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	req, err := c.newRequest(http.MethodPost, body)
+	if err != nil {
+		return nil, err
+	}
+	records := []*ListRecords{}
+	_, err = c.do(req, &records)
+
+	return records, nil
 }
 
 func (c Client) CreateTXT(body CreateTxtRecord) (*CreateTxtRecord, error) {
