@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/GlobalArtInc/cert-manager-webhook-ispmanager/ispmanager"
 	"os"
 
 	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/cert-manager/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 	"github.com/cert-manager/cert-manager/pkg/acme/webhook/cmd"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -34,7 +36,7 @@ type ispmanagerDNSProviderSolver struct {
 }
 
 type ispmanagerDNSProviderConfig struct {
-	PaneuUrl string `json:"panelUrl"`
+	PanelUrl string `json:"panelUrl"`
 	User     string `json:"user"`
 	Password string `json:"password"`
 }
@@ -59,12 +61,12 @@ func (c *ispmanagerDNSProviderSolver) Present(challengeRequest *v1alpha1.Challen
 	if err != nil {
 		return err
 	}
-	ispClient := NewIspClient(cfg.PaneuUrl, cfg.User, cfg.Password)
-	if err := ispClient.createTXT(getDomainFromZone(challengeRequest.ResolvedZone), challengeRequest.ResolvedFQDN, challengeRequest.Key); err != nil {
-		return fmt.Errorf("unable to create TXT record: %v", err)
+	provider, err := c.provider(&cfg)
+	if err != nil {
+		return err
 	}
 
-	return nil
+	return provider.Present(getDomainFromZone(challengeRequest.ResolvedZone), challengeRequest.ResolvedFQDN, challengeRequest.Key)
 }
 
 // CleanUp should delete the relevant TXT record from the DNS provider console.
@@ -78,13 +80,12 @@ func (c *ispmanagerDNSProviderSolver) CleanUp(challengeRequest *v1alpha1.Challen
 	if err != nil {
 		return err
 	}
-	ispClient := NewIspClient(cfg.PaneuUrl, cfg.User, cfg.Password)
-	if err := ispClient.deleteTXT(getDomainFromZone(challengeRequest.ResolvedZone), challengeRequest.ResolvedFQDN, challengeRequest.Key); err != nil {
-		return fmt.Errorf("unable to create TXT record: %v", err)
+	provider, err := c.provider(&cfg)
+	if err != nil {
+		return err
 	}
 
-	// TODO: add code that deletes a record from the DNS provider's console
-	return nil
+	return provider.CleanUp(getDomainFromZone(challengeRequest.ResolvedZone), challengeRequest.ResolvedFQDN, challengeRequest.Key)
 }
 
 // Initialize will be called when the webhook first starts.
@@ -103,8 +104,15 @@ func (c *ispmanagerDNSProviderSolver) Initialize(kubeClientConfig *rest.Config, 
 		return err
 	}
 	c.client = cl
+	log.SetFormatter(&log.JSONFormatter{})
 
 	return nil
+}
+
+func (c *ispmanagerDNSProviderSolver) provider(cfg *ispmanagerDNSProviderConfig) (*ispmanager.IspClient, error) {
+	IspClient := ispmanager.NewIspClient(cfg.PanelUrl, cfg.User, cfg.Password)
+
+	return IspClient, nil
 }
 
 // loadConfig is a small helper function that decodes JSON configuration into
