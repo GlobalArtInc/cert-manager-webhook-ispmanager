@@ -7,9 +7,8 @@ Cert-manager ACME DNS webhook provider for ISPManager.
 To install with helm, run:
 
 ```bash
-$ git clone https://github.com/GlobalArtInc/cert-manager-webhook-ispmanager.git
-$ cd cert-manager-webhook-ispmanager/helm
-$ helm upgrade --install cert-manager-webhook-ispmanager .
+$ helm repo add globalart https://globalartinc.github.io/charts
+$ helm upgrade --install cert-manager-webhook-ispmanager globalart/cert-manager-webhook-ispmanager
 ```
 
 Without helm, run:
