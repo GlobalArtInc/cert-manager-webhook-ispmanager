@@ -8,7 +8,7 @@ To install with helm, run:
 
 ```bash
 $ helm repo add globalart https://globalartinc.github.io/charts
-$ helm upgrade --install cert-manager-webhook-ispmanager globalart/cert-manager-webhook-ispmanager
+$ helm upgrade -n cert-manager --install cert-manager-webhook-ispmanager globalart/cert-manager-webhook-ispmanager
 ```
 
 Without helm, run:
