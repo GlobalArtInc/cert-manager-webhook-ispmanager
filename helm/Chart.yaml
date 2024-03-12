@@ -1,5 +1,0 @@
-apiVersion: v1
-name: cert-manager-webhook-ispmanager
-appVersion: "1.2.3"
-description: ISPManager  cert-manager ACME webhook
-version: 1.2.3
