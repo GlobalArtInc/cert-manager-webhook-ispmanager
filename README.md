@@ -11,12 +11,6 @@ $ helm repo add globalart https://globalartinc.github.io/helm-charts
 $ helm upgrade -n cert-manager --install cert-manager-webhook-ispmanager globalart/cert-manager-webhook-ispmanager
 ```
 
-Without helm, run:
-
-```bash
-$ make rendered-manifest.yaml
-$ kubectl apply -f _out/rendered-manifest.yaml
-```
 
 ### Issuer/ClusterIssuer
 
