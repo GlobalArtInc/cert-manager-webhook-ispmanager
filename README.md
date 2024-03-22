@@ -64,8 +64,8 @@ spec:
 You can run the test suite with:
 
 1. Fill in the appropriate values in `testdata/ispmanager/config.json` 
-2. Change `dns.SetDNSServer("127.0.0.1:53")` on your DNS Server
+2. Replace DNS_SERVER on your DNS_SERVER_IP
 
 ```bash
-$ TEST_ZONE_NAME=example.com. make test
+$ DNS_SERVER=10.251.10.161:53 TEST_ZONE_NAME=example.com. make test
 ```
