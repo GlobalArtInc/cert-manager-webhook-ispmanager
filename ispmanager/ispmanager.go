@@ -2,9 +2,10 @@ package ispmanager
 
 import (
 	"fmt"
+	"net/http"
+
 	"github.com/GlobalArtInc/cert-manager-webhook-ispmanager/ispmanager/internal"
 	log "github.com/sirupsen/logrus"
-	"net/http"
 )
 
 type IspClientConfig struct {
@@ -43,6 +44,7 @@ func (c IspClient) Present(zone, fqdn, key string) error {
 		Plid:     zone,
 		Rtype:    "txt",
 		Name:     fqdn,
+		Ttl:      30,
 		Sok:      "ok",
 		Value:    key,
 	}
@@ -53,6 +55,7 @@ func (c IspClient) Present(zone, fqdn, key string) error {
 	log.WithFields(log.Fields{
 		"event":    "created_txt",
 		"domain":   zone,
+		"ttl":      txtRecord.Ttl,
 		"zone":     fqdn,
 		"panelUrl": c.config.panelUrl,
 	}).Info("Created txt record")

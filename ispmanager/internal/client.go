@@ -4,9 +4,10 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"github.com/google/go-querystring/query"
 	"net/http"
 	"strings"
+
+	"github.com/google/go-querystring/query"
 )
 
 type CreateTxtRecord struct {
@@ -16,6 +17,7 @@ type CreateTxtRecord struct {
 	Plid     string `url:"plid"`
 	Rtype    string `url:"rtype"`
 	Name     string `url:"name"`
+	Ttl      int    `url:"ttl"`
 	Sok      string `url:"sok"`
 	Value    string `url:"value"`
 }
