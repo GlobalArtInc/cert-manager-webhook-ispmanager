@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/GlobalArtInc/cert-manager-webhook-ispmanager/ispmanager"
+	"golang.org/x/net/publicsuffix"
 	"os"
+	"strings"
 
 	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/kubernetes"
@@ -66,7 +68,7 @@ func (c *ispmanagerDNSProviderSolver) Present(challengeRequest *v1alpha1.Challen
 		return err
 	}
 
-	return provider.Present(getDomainFromZone(challengeRequest.ResolvedZone), challengeRequest.ResolvedFQDN, challengeRequest.Key)
+	return provider.Present(getRegisteredDomain(challengeRequest.ResolvedFQDN), challengeRequest.ResolvedFQDN, challengeRequest.Key)
 }
 
 // CleanUp should delete the relevant TXT record from the DNS provider console.
@@ -85,7 +87,7 @@ func (c *ispmanagerDNSProviderSolver) CleanUp(challengeRequest *v1alpha1.Challen
 		return err
 	}
 
-	return provider.CleanUp(getDomainFromZone(challengeRequest.ResolvedZone), challengeRequest.ResolvedFQDN, challengeRequest.Key)
+	return provider.CleanUp(getRegisteredDomain(challengeRequest.ResolvedFQDN), challengeRequest.ResolvedFQDN, challengeRequest.Key)
 }
 
 // Initialize will be called when the webhook first starts.
@@ -130,6 +132,11 @@ func loadConfig(cfgJSON *extapi.JSON) (ispmanagerDNSProviderConfig, error) {
 	return cfg, nil
 }
 
-func getDomainFromZone(zone string) string {
-	return zone[0 : len(zone)-1]
+func getRegisteredDomain(fqdn string) string {
+	name := strings.TrimSuffix(fqdn, ".")
+	domain, err := publicsuffix.EffectiveTLDPlusOne(name)
+	if err != nil {
+		return name
+	}
+	return domain
 }

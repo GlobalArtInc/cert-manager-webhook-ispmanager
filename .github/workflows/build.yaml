@@ -19,4 +19,4 @@ jobs:
           push: true
           tags: |
             globalartltd/cert-manager-webhook-ispmanager:latest
-            globalartltd/cert-manager-webhook-ispmanager:1.16.3
+            globalartltd/cert-manager-webhook-ispmanager:1.16.3-b${{ github.run_number }}
