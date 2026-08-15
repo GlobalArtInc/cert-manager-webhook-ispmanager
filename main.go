@@ -106,7 +106,7 @@ func (c *ispmanagerDNSProviderSolver) Initialize(kubeClientConfig *rest.Config, 
 		return err
 	}
 	c.client = cl
-	log.SetFormatter(&log.JSONFormatter{})
+	log.SetFormatter(&log.TextFormatter{FullTimestamp: true})
 
 	return nil
 }
